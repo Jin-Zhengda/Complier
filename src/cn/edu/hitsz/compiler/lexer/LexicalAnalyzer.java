@@ -4,6 +4,7 @@ import cn.edu.hitsz.compiler.NotImplementedException;
 import cn.edu.hitsz.compiler.symtab.SymbolTable;
 import cn.edu.hitsz.compiler.utils.FileUtils;
 
+import java.util.ArrayList;
 import java.util.stream.StreamSupport;
 
 /**
@@ -16,9 +17,13 @@ import java.util.stream.StreamSupport;
  */
 public class LexicalAnalyzer {
     private final SymbolTable symbolTable;
+    private final ArrayList<String> srcLines;
+    private final ArrayList<Token> tokens;
 
     public LexicalAnalyzer(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
+        this.srcLines = new ArrayList<>();
+        this.tokens = new ArrayList<>();
     }
 
 
@@ -31,7 +36,38 @@ public class LexicalAnalyzer {
         // TODO: 词法分析前的缓冲区实现
         // 可自由实现各类缓冲区
         // 或直接采用完整读入方法
-        throw new NotImplementedException();
+        srcLines.addAll(FileUtils.readLines(path));
+    }
+
+
+    private Boolean isDigital(String str) {
+        for (char c : str.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    private void fillSymbolTable(String text) {
+        if (!symbolTable.has(text)) {
+            symbolTable.add(text);
+        }
+    }
+
+
+    private void tokenGenerator(String buffer) {
+        if (TokenKind.isAllowed(buffer)) {
+            tokens.add(Token.simple(buffer));
+        } else {
+            if (isDigital(buffer)) {
+                tokens.add(Token.normal("IntConst", buffer));
+            } else {
+                tokens.add(Token.normal("id", buffer));
+                fillSymbolTable(buffer);
+            }
+        }
     }
 
     /**
@@ -40,7 +76,22 @@ public class LexicalAnalyzer {
      */
     public void run() {
         // TODO: 自动机实现的词法分析过程
-        throw new NotImplementedException();
+        for (final var line : srcLines) {
+            StringBuilder buffer = new StringBuilder();
+            for (final var ch : line.toCharArray()) {
+                 if (ch == ' ' || ch == '\n') {
+                    tokenGenerator(buffer.toString());
+                    buffer.setLength(0);
+                 } else if (ch == ';') {
+                    tokenGenerator(buffer.toString());
+                    tokenGenerator("Semicolon");
+                    buffer.setLength(0);
+                 } else {
+                     buffer.append(ch);
+                 }
+            }
+        }
+        tokenGenerator("$");
     }
 
     /**
@@ -53,7 +104,7 @@ public class LexicalAnalyzer {
         // 词法分析过程可以使用 Stream 或 Iterator 实现按需分析
         // 亦可以直接分析完整个文件
         // 总之实现过程能转化为一列表即可
-        throw new NotImplementedException();
+        return tokens;
     }
 
     public void dumpTokens(String path) {
