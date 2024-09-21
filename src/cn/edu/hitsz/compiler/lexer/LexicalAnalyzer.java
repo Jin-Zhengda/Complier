@@ -70,26 +70,53 @@ public class LexicalAnalyzer {
         }
     }
 
+    enum State {
+        INITIAL,
+        IN_TOKEN
+    }
+
     /**
      * 执行词法分析, 准备好用于返回的 token 列表 <br>
      * 需要维护实验一所需的符号表条目, 而得在语法分析中才能确定的符号表条目的成员可以先设置为 null
      */
     public void run() {
         // TODO: 自动机实现的词法分析过程
+        StringBuilder buffer = new StringBuilder();
+        State currentState = State.INITIAL;
+
         for (final var line : srcLines) {
-            StringBuilder buffer = new StringBuilder();
             for (final var ch : line.toCharArray()) {
-                 if (ch == ' ' || ch == '\n') {
-                    tokenGenerator(buffer.toString());
-                    buffer.setLength(0);
-                 } else if (ch == ';') {
-                    tokenGenerator(buffer.toString());
-                    tokenGenerator("Semicolon");
-                    buffer.setLength(0);
-                 } else {
-                     buffer.append(ch);
-                 }
+                switch (currentState) {
+                    case INITIAL:
+                        if (Character.isWhitespace(ch)) {
+                            continue;
+                        } else if (ch == ';') {
+                            tokenGenerator("Semicolon");
+                        } else {
+                            buffer.append(ch);
+                            currentState = State.IN_TOKEN;
+                        }
+                        break;
+                    case IN_TOKEN:
+                        if (Character.isWhitespace(ch)) {
+                            tokenGenerator(buffer.toString());
+                            buffer.setLength(0);
+                            currentState = State.INITIAL;
+                        } else if (ch == ';') {
+                            tokenGenerator(buffer.toString());
+                            buffer.setLength(0);
+                            tokenGenerator("Semicolon");
+                            currentState = State.INITIAL;
+                        } else {
+                            buffer.append(ch);
+                        }
+                        break;
+                }
             }
+        }
+
+        if (!buffer.isEmpty()) {
+            tokenGenerator(buffer.toString());
         }
         tokenGenerator("$");
     }
