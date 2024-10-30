@@ -1,6 +1,5 @@
 package cn.edu.hitsz.compiler.parser;
 
-import cn.edu.hitsz.compiler.NotImplementedException;
 import cn.edu.hitsz.compiler.lexer.Token;
 import cn.edu.hitsz.compiler.parser.table.*;
 import cn.edu.hitsz.compiler.symtab.SymbolTable;
@@ -125,21 +124,6 @@ public class SyntaxAnalyzer {
             } else {
                 System.out.println("Error!");
             }
-        }
-    }
-
-    private class Symbol {
-        private final Token token;
-        private final NonTerminal nonTerminal;
-
-        public Symbol(Token token) {
-            this.token = token;
-            this.nonTerminal = null;
-        }
-
-        public Symbol(NonTerminal nonTerminal) {
-            this.token = null;
-            this.nonTerminal = nonTerminal;
         }
     }
 }
